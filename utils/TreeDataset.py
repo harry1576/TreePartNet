@@ -4,6 +4,7 @@ import numpy as np
 import torch.utils.data as data
 import h5py
 from pointnet2_ops import pointnet2_utils
+import open3d as o3d
 
 class TreeDataset(data.Dataset):
     def __init__(self, h5_filename):
@@ -69,10 +70,33 @@ class FoliageDataset(data.Dataset):
         return torch.from_numpy(points).float(), torch.from_numpy(isfoliage)
 
 if __name__ == "__main__":
-    ds = TreeDataset('/app/ImplicitCylinders/utils/tree_test.hdf5')
-    p,i,pi=ds[3]
-    samples=pointnet2_utils.furthest_point_sample(torch.Tensor(np.expand_dims(p,0)).cuda(), 256)
-    pts = samples[0].cpu()
+    ds = TreeDataset('../data/neural_decompostion/tree_labeled_train.hdf5')
+    """
+    for d in ds:
+        print(d[0].shape)
+        print(d[1].shape)
+        print(d[2].shape)   
+        print(d[3].shape)   
+
+        
+
+
+        quit()  
+    """
+    p,i,pi,x=ds[0]
+    
+    for d in ds:
+        p,i,pi,x=d
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(p)
+        o3d.visualization.draw_geometries([pcd])
+        
+    print(p.shape)
+    
+    quit()
+    samples = pointnet2_utils.furthest_point_sample(torch.Tensor(np.expand_dims(p,0)).cuda(), 256)
+    pts=samples[0].cpu()
+    
     xyz = p[pts.long()]
     sz = i.shape[0]
     cl = []
